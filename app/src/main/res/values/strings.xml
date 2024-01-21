@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">GitHubUserV2</string>
+    <string name="followers">%1$s Followers</string>
+    <string name="following">%1$s Following</string>
+    <string name="searchbar_hint">Enter username to search</string>
+    <string name="splash_image">Splash Image</string>
+    <string name="tab_text_followers">Followers</string>
+    <string name="tab_text_following">Following</string>
+    <string name="tab_layout_hint">Select Tabs</string>
+    <string name="button_favorite">Button Favorite</string>
+    <string name="favorite_user">Favorite User</string>
+    <string name="set_theme">Set Theme</string>
+</resources>
