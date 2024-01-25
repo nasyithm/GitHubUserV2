@@ -1,32 +1,34 @@
 package com.nasyith.githubuserv2.ui.detailuser
 
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.nasyith.githubuserv2.R
+import com.nasyith.githubuserv2.data.Result
 import com.nasyith.githubuserv2.data.local.entity.FavoriteUser
 import com.nasyith.githubuserv2.data.remote.response.DetailUserResponse
 import com.nasyith.githubuserv2.data.remote.response.UserItem
 import com.nasyith.githubuserv2.databinding.ActivityDetailUserBinding
 import com.nasyith.githubuserv2.helper.ViewModelFactory
 import com.nasyith.githubuserv2.ui.adapter.SectionsPagerAdapter
-import com.nasyith.githubuserv2.ui.detailuser.DetailUserViewModel.Companion.username
 
 class DetailUserActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDetailUserBinding
 
     private var favoriteUser: FavoriteUser? = null
-    private val detailUserViewModel by viewModels<DetailUserViewModel>{
-        ViewModelFactory.getInstance(application)
+    private var username = "username"
+
+    private val detailUserViewModel: DetailUserViewModel by viewModels {
+        ViewModelFactory.getInstance(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,12 +45,35 @@ class DetailUserActivity : AppCompatActivity() {
 
         username = user?.login.toString()
 
-        detailUserViewModel.detailUser.observe(this) { detailUser ->
-            if (detailUser != null) {
-                setDetailUserData(detailUser)
-                favoriteUser = FavoriteUser(detailUser.login.toString(), detailUser.id!!, detailUser.avatarUrl)
+        detailUserViewModel.dataLoaded.observe(this) { isDataLoaded ->
+            if (!isDataLoaded) {
+                detailUserViewModel.findDetailUser(username).observe(this) { result ->
+                    when (result) {
+                        is Result.Loading -> {
+                            showLoading(true)
+                        }
+                        is Result.Success -> {
+                            showLoading(false)
+                            setDetailUserData(result.data)
+                            favoriteUser = FavoriteUser(result.data.login.toString(), result.data.id!!, result.data.avatarUrl.toString())
+                            detailUserViewModel.setDataDetailUser(result.data)
+                            detailUserViewModel.setDataLoaded(true)
+                        }
+                        is Result.Error -> {
+                            showLoading(false)
+                            detailUserViewModel.setError(result.error)
+                            detailUserViewModel.setDataLoaded(true)
+                        }
+                    }
+                }
+            } else {
+                detailUserViewModel.detailUser.observe(this) {
+                    setDetailUserData(it)
+                    favoriteUser = FavoriteUser(it.login.toString(), it.id!!, it.avatarUrl.toString())
+                }
             }
         }
+
 
         val sectionsPagerAdapter = SectionsPagerAdapter(this)
         sectionsPagerAdapter.username = user?.login.toString()
@@ -59,23 +84,29 @@ class DetailUserActivity : AppCompatActivity() {
             tab.text = resources.getString(TAB_TITLES[position])
         }.attach()
 
-        detailUserViewModel.isLoading.observe(this) {
-            showLoading(it)
+        detailUserViewModel.detailUser.observe(this) {
+            if (it.login != null) {
+                binding.btnFavoriteUser.isEnabled = true
+
+                detailUserViewModel.getFavoriteUserByUsername(username).observe(this) { favUser ->
+                    if (favUser != null) {
+                        binding.btnFavoriteUser.setImageResource(R.drawable.baseline_favorite_24)
+                        binding.btnFavoriteUser.setOnClickListener {
+                            detailUserViewModel.deleteFavoriteUser(favoriteUser?.username.toString())
+                        }
+                    } else {
+                        binding.btnFavoriteUser.setImageResource(R.drawable.baseline_favorite_border_24)
+                        binding.btnFavoriteUser.setOnClickListener {
+                            detailUserViewModel.insertFavoriteUser(favoriteUser as FavoriteUser)
+                        }
+                    }
+                }
+            }
         }
 
         detailUserViewModel.isError.observe(this) { it ->
             it.getContentIfNotHandled()?.let {
                 showError(it)
-            }
-        }
-
-        detailUserViewModel.getFavoriteUserByUsername(username).observe(this) { favUser ->
-            if (favUser != null) {
-                binding.btnFavoriteUser.setImageResource(R.drawable.baseline_favorite_24)
-                binding.btnFavoriteUser.setOnClickListener { detailUserViewModel.deleteFavoriteUser(favoriteUser?.username.toString()) }
-            } else {
-                binding.btnFavoriteUser.setImageResource(R.drawable.baseline_favorite_border_24)
-                binding.btnFavoriteUser.setOnClickListener { detailUserViewModel.insertFavoriteUser(favoriteUser as FavoriteUser) }
             }
         }
     }
@@ -91,7 +122,9 @@ class DetailUserActivity : AppCompatActivity() {
         binding.detailFollowing.text = getString(R.string.following, detailUser.following.toString())
     }
 
-    private fun showLoading(isLoading: Boolean) { binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE }
+    private fun showLoading(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
 
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()

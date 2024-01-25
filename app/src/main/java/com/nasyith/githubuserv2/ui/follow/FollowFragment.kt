@@ -2,24 +2,32 @@ package com.nasyith.githubuserv2.ui.follow
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.nasyith.githubuserv2.data.Result
 import com.nasyith.githubuserv2.data.remote.response.UserItem
 import com.nasyith.githubuserv2.databinding.FragmentFollowBinding
+import com.nasyith.githubuserv2.helper.ViewModelFactory
 import com.nasyith.githubuserv2.ui.adapter.UserAdapter
-import com.nasyith.githubuserv2.ui.follow.FollowViewModel.Companion.position
-import com.nasyith.githubuserv2.ui.follow.FollowViewModel.Companion.username
 import com.nasyith.githubuserv2.ui.detailuser.DetailUserActivity
 
 class FollowFragment : Fragment() {
+
     private var _binding: FragmentFollowBinding? = null
     private val binding get() = _binding!!
+
+    private var position = 1
+    private var username = "username"
+
+    private val followViewModel: FollowViewModel by viewModels {
+        ViewModelFactory.getInstance(requireActivity())
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -28,16 +36,59 @@ class FollowFragment : Fragment() {
             username = it.getString(ARG_USERNAME).toString()
         }
 
-        val followViewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory())[FollowViewModel::class.java]
-        followViewModel.followers.observe(requireActivity()) { followers ->
-            if (followers != null) {
-                setFollowersUserData(followers)
+        if (position == 1) {
+            followViewModel.dataLoaded.observe(viewLifecycleOwner) { isDataLoaded ->
+                if (!isDataLoaded) {
+                    followViewModel.findFollowersUser(username).observe(viewLifecycleOwner) { followers ->
+                        when (followers) {
+                            is Result.Loading -> {
+                                showLoading(true)
+                            }
+                            is Result.Success -> {
+                                showLoading(false)
+                                setFollowUserData(followers.data)
+                                followViewModel.setDataFollowUser(followers.data)
+                                followViewModel.setDataLoaded(true)
+                            }
+                            is Result.Error -> {
+                                showLoading(false)
+                                followViewModel.setError(followers.error)
+                                followViewModel.setDataLoaded(true)
+                            }
+                        }
+                    }
+                } else {
+                    followViewModel.followUser.observe(viewLifecycleOwner) {
+                        setFollowUserData(it)
+                    }
+                }
             }
-        }
-
-        followViewModel.following.observe(requireActivity()) { following ->
-            if (following != null) {
-                setFollowingUserData(following)
+        } else {
+            followViewModel.dataLoaded.observe(viewLifecycleOwner) { isDataLoaded ->
+                if (!isDataLoaded) {
+                    followViewModel.findFollowingUser(username).observe(viewLifecycleOwner) { following ->
+                        when (following) {
+                            is Result.Loading -> {
+                                showLoading(true)
+                            }
+                            is Result.Success -> {
+                                showLoading(false)
+                                setFollowUserData(following.data)
+                                followViewModel.setDataFollowUser(following.data)
+                                followViewModel.setDataLoaded(true)
+                            }
+                            is Result.Error -> {
+                                showLoading(false)
+                                followViewModel.setError(following.error)
+                                followViewModel.setDataLoaded(true)
+                            }
+                        }
+                    }
+                } else {
+                    followViewModel.followUser.observe(viewLifecycleOwner) {
+                        setFollowUserData(it)
+                    }
+                }
             }
         }
 
@@ -46,11 +97,7 @@ class FollowFragment : Fragment() {
         val itemDecoration = DividerItemDecoration(requireActivity(), layoutManager.orientation)
         binding.rvFollow.addItemDecoration(itemDecoration)
 
-        followViewModel.isLoading.observe(requireActivity()) {
-            showLoading(it)
-        }
-
-        followViewModel.isError.observe(requireActivity()) { it ->
+        followViewModel.isError.observe(viewLifecycleOwner) { it ->
             it.getContentIfNotHandled()?.let {
                 showError(it)
             }
@@ -65,21 +112,9 @@ class FollowFragment : Fragment() {
         return binding.root
     }
 
-    private fun setFollowersUserData(followers: List<UserItem>) {
+    private fun setFollowUserData(follow: List<UserItem>) {
         val adapter = UserAdapter()
-        adapter.submitList(followers)
-        binding.rvFollow.adapter = adapter
-
-        adapter.setOnItemClickCallback(object : UserAdapter.OnItemClickCallback {
-            override fun onItemClicked(data: UserItem) {
-                showDetailUser(data)
-            }
-        })
-    }
-
-    private fun setFollowingUserData(following: List<UserItem>) {
-        val adapter = UserAdapter()
-        adapter.submitList(following)
+        adapter.submitList(follow)
         binding.rvFollow.adapter = adapter
 
         adapter.setOnItemClickCallback(object : UserAdapter.OnItemClickCallback {

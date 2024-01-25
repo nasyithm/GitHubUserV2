@@ -1,96 +1,40 @@
 package com.nasyith.githubuserv2.ui.follow
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.nasyith.githubuserv2.data.UserRepository
 import com.nasyith.githubuserv2.data.remote.response.UserItem
-import com.nasyith.githubuserv2.data.remote.retrofit.ApiConfig
 import com.nasyith.githubuserv2.util.Event
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
-class FollowViewModel : ViewModel() {
-    private val _followers = MutableLiveData<List<UserItem>?>()
-    val followers: LiveData<List<UserItem>?> = _followers
+class FollowViewModel(private val userRepository: UserRepository) : ViewModel() {
 
-    private val _following = MutableLiveData<List<UserItem>?>()
-    val following: LiveData<List<UserItem>?> = _following
+    private val _followUser = MutableLiveData<List<UserItem>>()
+    val followUser: LiveData<List<UserItem>> = _followUser
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    private val _dataLoaded = MutableLiveData<Boolean>()
+    val dataLoaded: LiveData<Boolean> = _dataLoaded
 
     private val _isError = MutableLiveData<Event<String>>()
     val isError: LiveData<Event<String>> = _isError
 
     init {
-        if (position == 1) {
-            findFollowersUser(username)
-        } else {
-            findFollowingUser(username)
-        }
+        setDataLoaded(false)
     }
 
-    private fun findFollowersUser(username: String) {
-        _isLoading.value = true
-        val client = ApiConfig.getApiService().getFollowersUser(username)
-        client.enqueue(object : Callback<List<UserItem>> {
-            override fun onResponse(
-                call: Call<List<UserItem>>,
-                response: Response<List<UserItem>>
-            ) {
-                _isLoading.value = false
-                if (response.body()?.isNotEmpty() == true) {
-                    val responseBody = response.body()
-                    if (responseBody != null) {
-                        _followers.value = responseBody
-                    }
-                } else {
-                    Log.e(TAG, "onFailure: ${response.message()}")
-                    _isError.value = Event("Followers not found")
-                }
-            }
-
-            override fun onFailure(call: Call<List<UserItem>>, t: Throwable) {
-                _isLoading.value = false
-                Log.e(TAG, "onFailure: ${t.message}")
-                _isError.value = Event("Unable to connect internet")
-            }
-        })
+    fun setDataLoaded(isDataLoaded: Boolean) {
+        _dataLoaded.value = isDataLoaded
     }
 
-    private fun findFollowingUser(username: String) {
-        _isLoading.value = true
-        val client = ApiConfig.getApiService().getFollowingUser(username)
-        client.enqueue(object : Callback<List<UserItem>> {
-            override fun onResponse(
-                call: Call<List<UserItem>>,
-                response: Response<List<UserItem>>
-            ) {
-                _isLoading.value = false
-                if (response.body()?.isNotEmpty() == true) {
-                    val responseBody = response.body()
-                    if (responseBody != null) {
-                        _following.value = responseBody
-                    }
-                } else {
-                    Log.e(TAG, "onFailure: ${response.message()}")
-                    _isError.value = Event("Following not found")
-                }
-            }
-
-            override fun onFailure(call: Call<List<UserItem>>, t: Throwable) {
-                _isLoading.value = false
-                Log.e(TAG, "onFailure: ${t.message}")
-                _isError.value = Event("Unable to connect internet")
-            }
-        })
+    fun setDataFollowUser(followUser: List<UserItem>) {
+        _followUser.value = followUser
     }
 
-    companion object {
-        private const val TAG = "FollowFragment"
-        var position = 1
-        var username = ""
+    fun setError(message: String) {
+        _isError.value = Event(message)
     }
+
+    fun findFollowersUser(username: String) = userRepository.findFollowersUser(username)
+
+    fun findFollowingUser(username: String) = userRepository.findFollowingUser(username)
 }

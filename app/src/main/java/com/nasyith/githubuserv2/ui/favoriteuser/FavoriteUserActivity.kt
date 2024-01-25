@@ -1,10 +1,10 @@
 package com.nasyith.githubuserv2.ui.favoriteuser
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.nasyith.githubuserv2.data.remote.response.UserItem
@@ -16,8 +16,8 @@ import com.nasyith.githubuserv2.ui.detailuser.DetailUserActivity
 class FavoriteUserActivity : AppCompatActivity() {
     private lateinit var binding: ActivityFavoriteUserBinding
 
-    private val favoriteUserViewModel by viewModels<FavoriteUserViewModel>{
-        ViewModelFactory.getInstance(application)
+    private val favoriteUserViewModel: FavoriteUserViewModel by viewModels {
+        ViewModelFactory.getInstance(this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +35,12 @@ class FavoriteUserActivity : AppCompatActivity() {
                     items.add(item)
                 }
             } else {
-                Toast.makeText(this, "You don't have favorite users", Toast.LENGTH_SHORT).show()
+                favoriteUserViewModel.dataLoaded.observe(this) { isDataLoaded ->
+                    if (!isDataLoaded) {
+                        favoriteUserViewModel.setError("You don't have favorite users")
+                        favoriteUserViewModel.setDataLoaded(true)
+                    }
+                }
             }
 
             adapter.submitList(items)
@@ -52,11 +57,21 @@ class FavoriteUserActivity : AppCompatActivity() {
         binding.rvFavoriteUser.layoutManager = layoutManager
         val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
         binding.rvFavoriteUser.addItemDecoration(itemDecoration)
+
+        favoriteUserViewModel.isError.observe(this) { it ->
+            it.getContentIfNotHandled()?.let {
+                showError(it)
+            }
+        }
     }
 
     private fun showDetailUser(user: UserItem) {
         val showDetailUserIntent = Intent(this@FavoriteUserActivity, DetailUserActivity::class.java)
         showDetailUserIntent.putExtra(DetailUserActivity.EXTRA_USER, user)
         startActivity(showDetailUserIntent)
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }

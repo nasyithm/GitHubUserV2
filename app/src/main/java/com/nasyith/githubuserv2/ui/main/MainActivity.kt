@@ -1,32 +1,35 @@
 package com.nasyith.githubuserv2.ui.main
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.nasyith.githubuserv2.R
+import com.nasyith.githubuserv2.data.Result
 import com.nasyith.githubuserv2.data.remote.response.UserItem
 import com.nasyith.githubuserv2.databinding.ActivityMainBinding
-import com.nasyith.githubuserv2.helper.PreferencesViewModelFactory
-import com.nasyith.githubuserv2.helper.SettingPreferences
-import com.nasyith.githubuserv2.helper.dataStore
+import com.nasyith.githubuserv2.helper.ViewModelFactory
 import com.nasyith.githubuserv2.ui.adapter.UserAdapter
 import com.nasyith.githubuserv2.ui.detailuser.DetailUserActivity
 import com.nasyith.githubuserv2.ui.favoriteuser.FavoriteUserActivity
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var mainViewModel: MainViewModel
 
+    private val username = "nasyith"
     private var isDarkModeActive = false
+
+    private val mainViewModel: MainViewModel by viewModels {
+        ViewModelFactory.getInstance(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,10 +37,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         setSupportActionBar(binding.searchBar)
 
-        val pref = SettingPreferences.getInstance(dataStore)
-        mainViewModel = ViewModelProvider(this, PreferencesViewModelFactory(pref))[MainViewModel::class.java]
-        mainViewModel.users.observe(this) { users ->
-            setUserData(users)
+        mainViewModel.dataLoaded.observe(this) { isDataLoaded ->
+            if (!isDataLoaded) {
+                findUser(username)
+            } else {
+                mainViewModel.users.observe(this) {
+                    setUserData(it)
+                }
+            }
         }
 
         val layoutManager = LinearLayoutManager(this)
@@ -52,19 +59,9 @@ class MainActivity : AppCompatActivity() {
                 .setOnEditorActionListener { _, _, _ ->
                     val username = searchView.text.toString()
                     searchView.hide()
-                    mainViewModel.findUser(username)
+                    findUser(username)
                     false
                 }
-        }
-
-        mainViewModel.isLoading.observe(this) {
-            showLoading(it)
-        }
-
-        mainViewModel.isError.observe(this) { it ->
-            it.getContentIfNotHandled()?.let {
-                showError(it)
-            }
         }
 
         mainViewModel.getThemeSetting().observe(this) { isDarkModeActive: Boolean ->
@@ -74,6 +71,12 @@ class MainActivity : AppCompatActivity() {
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                 this.isDarkModeActive = true
+            }
+        }
+
+        mainViewModel.isError.observe(this) { it ->
+            it.getContentIfNotHandled()?.let {
+                showError(it)
             }
         }
     }
@@ -103,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                 menu?.findItem(R.id.menuTheme)?.icon =
                     ContextCompat.getDrawable(this, R.drawable.baseline_light_mode_24)
                 menu?.findItem(R.id.menuFavorite)?.icon =
-                    ContextCompat.getDrawable(this, R.drawable.baseline_favorite_white_24)
+                    ContextCompat.getDrawable(this, R.drawable.baseline_favorite_night_24)
             } else {
                 menu?.findItem(R.id.menuTheme)?.icon =
                     ContextCompat.getDrawable(this, R.drawable.baseline_night_mode_24)
@@ -112,6 +115,27 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return super.onPrepareOptionsMenu(menu)
+    }
+
+    private fun findUser(username: String) {
+        mainViewModel.findUser(username).observe(this) { result ->
+            when (result) {
+                is Result.Loading -> {
+                    showLoading(true)
+                }
+                is Result.Success -> {
+                    showLoading(false)
+                    setUserData(result.data.items)
+                    mainViewModel.setDataUsers(result.data.items)
+                    mainViewModel.setDataLoaded(true)
+                }
+                is Result.Error -> {
+                    showLoading(false)
+                    mainViewModel.setError(result.error)
+                    mainViewModel.setDataLoaded(true)
+                }
+            }
+        }
     }
 
     private fun setUserData(users: List<UserItem?>?) {
