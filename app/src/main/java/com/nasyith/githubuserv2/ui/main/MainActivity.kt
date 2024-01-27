@@ -24,8 +24,8 @@ import com.nasyith.githubuserv2.ui.favoriteuser.FavoriteUserActivity
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
-    private val username = "nasyith"
     private var isDarkModeActive = false
+    private val username = "nasyith"
 
     private val mainViewModel: MainViewModel by viewModels {
         ViewModelFactory.getInstance(this)
@@ -37,48 +37,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         setSupportActionBar(binding.searchBar)
 
-        mainViewModel.dataLoaded.observe(this) { isDataLoaded ->
-            if (!isDataLoaded) {
-                findUser(username)
-            } else {
-                mainViewModel.users.observe(this) {
-                    setUserData(it)
-                }
-            }
-        }
-
         val layoutManager = LinearLayoutManager(this)
         binding.rvUsers.layoutManager = layoutManager
         val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
         binding.rvUsers.addItemDecoration(itemDecoration)
 
-        with(binding) {
-            searchView.setupWithSearchBar(searchBar)
-            searchView
-                .editText
-                .setOnEditorActionListener { _, _, _ ->
-                    val username = searchView.text.toString()
-                    searchView.hide()
-                    findUser(username)
-                    false
-                }
-        }
-
-        mainViewModel.getThemeSetting().observe(this) { isDarkModeActive: Boolean ->
-            if (isDarkModeActive) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                this.isDarkModeActive = false
-            } else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                this.isDarkModeActive = true
-            }
-        }
-
-        mainViewModel.isError.observe(this) { it ->
-            it.getContentIfNotHandled()?.let {
-                showError(it)
-            }
-        }
+        setupSearchView()
+        getThemeSetting()
+        getUserData()
+        showError()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -89,7 +56,9 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menuFavorite -> {
-                val showFavoriteUserIntent = Intent(this@MainActivity, FavoriteUserActivity::class.java)
+                val showFavoriteUserIntent = Intent(
+                    this@MainActivity, FavoriteUserActivity::class.java
+                )
                 startActivity(showFavoriteUserIntent)
             }
             R.id.menuTheme -> {
@@ -115,6 +84,44 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return super.onPrepareOptionsMenu(menu)
+    }
+
+    private fun setupSearchView() {
+        with(binding) {
+            searchView.setupWithSearchBar(searchBar)
+            searchView
+                .editText
+                .setOnEditorActionListener { _, _, _ ->
+                    val username = searchView.text.toString()
+                    searchView.hide()
+                    findUser(username)
+                    false
+                }
+        }
+    }
+
+    private fun getThemeSetting() {
+        mainViewModel.getThemeSetting().observe(this) { isDarkMode: Boolean ->
+            if (isDarkMode) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                 this.isDarkModeActive = false
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                this.isDarkModeActive = true
+            }
+        }
+    }
+
+    private fun getUserData() {
+        mainViewModel.dataLoaded.observe(this) { isDataLoaded ->
+            if (!isDataLoaded) {
+                findUser(username)
+            } else {
+                mainViewModel.users.observe(this) {
+                    setUserData(it)
+                }
+            }
+        }
     }
 
     private fun findUser(username: String) {
@@ -150,14 +157,22 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun showLoading(isLoading: Boolean) { binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE }
+    private fun showLoading(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
 
-    private fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    private fun showError() {
+        mainViewModel.isError.observe(this) { it ->
+            it.getContentIfNotHandled()?.let {
+                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun showDetailUser(user: UserItem) {
-        val showDetailUserIntent = Intent(this@MainActivity, DetailUserActivity::class.java)
+        val showDetailUserIntent = Intent(
+            this@MainActivity, DetailUserActivity::class.java
+        )
         showDetailUserIntent.putExtra(DetailUserActivity.EXTRA_USER, user)
         startActivity(showDetailUserIntent)
     }

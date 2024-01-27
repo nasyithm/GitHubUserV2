@@ -10,7 +10,6 @@ import com.nasyith.githubuserv2.util.Event
 import kotlinx.coroutines.launch
 
 class MainViewModel(private val userRepository: UserRepository) : ViewModel() {
-
     private val _users = MutableLiveData<List<UserItem?>?>()
     val users: LiveData<List<UserItem?>?> = _users
 

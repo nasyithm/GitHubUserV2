@@ -45,6 +45,22 @@ class DetailUserActivity : AppCompatActivity() {
 
         username = user?.login.toString()
 
+        getDetailUserData()
+
+        val sectionsPagerAdapter = SectionsPagerAdapter(this)
+        sectionsPagerAdapter.username = user?.login.toString()
+        val viewPager: ViewPager2 = binding.viewPager
+        viewPager.adapter = sectionsPagerAdapter
+        val tabs: TabLayout = binding.tabs
+        TabLayoutMediator(tabs, viewPager) { tab, position ->
+            tab.text = resources.getString(TAB_TITLES[position])
+        }.attach()
+
+        setFavoriteUser()
+        showError()
+    }
+
+    private fun getDetailUserData() {
         detailUserViewModel.dataLoaded.observe(this) { isDataLoaded ->
             if (!isDataLoaded) {
                 detailUserViewModel.findDetailUser(username).observe(this) { result ->
@@ -73,17 +89,20 @@ class DetailUserActivity : AppCompatActivity() {
                 }
             }
         }
+    }
 
+    private fun setDetailUserData(detailUser: DetailUserResponse) {
+        Glide.with(this)
+            .load(detailUser.avatarUrl)
+            .transform(CircleCrop())
+            .into(binding.detailAvatar)
+        binding.detailUsername.text = detailUser.login
+        binding.detailName.text = detailUser.name
+        binding.detailFollowers.text = detailUser.followers.toString()
+        binding.detailFollowing.text = detailUser.following.toString()
+    }
 
-        val sectionsPagerAdapter = SectionsPagerAdapter(this)
-        sectionsPagerAdapter.username = user?.login.toString()
-        val viewPager: ViewPager2 = binding.viewPager
-        viewPager.adapter = sectionsPagerAdapter
-        val tabs: TabLayout = binding.tabs
-        TabLayoutMediator(tabs, viewPager) { tab, position ->
-            tab.text = resources.getString(TAB_TITLES[position])
-        }.attach()
-
+    private fun setFavoriteUser() {
         detailUserViewModel.detailUser.observe(this) {
             if (it.login != null) {
                 binding.btnFavoriteUser.isEnabled = true
@@ -103,31 +122,18 @@ class DetailUserActivity : AppCompatActivity() {
                 }
             }
         }
-
-        detailUserViewModel.isError.observe(this) { it ->
-            it.getContentIfNotHandled()?.let {
-                showError(it)
-            }
-        }
-    }
-
-    private fun setDetailUserData(detailUser: DetailUserResponse) {
-        Glide.with(this)
-            .load(detailUser.avatarUrl)
-            .transform(CircleCrop())
-            .into(binding.detailAvatar)
-        binding.detailUsername.text = detailUser.login
-        binding.detailName.text = detailUser.name
-        binding.detailFollowers.text = getString(R.string.followers, detailUser.followers.toString())
-        binding.detailFollowing.text = getString(R.string.following, detailUser.following.toString())
     }
 
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
-    private fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    private fun showError() {
+        detailUserViewModel.isError.observe(this) { it ->
+            it.getContentIfNotHandled()?.let {
+                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     companion object {
@@ -135,8 +141,8 @@ class DetailUserActivity : AppCompatActivity() {
 
         @StringRes
         private val TAB_TITLES = intArrayOf(
-            R.string.tab_text_followers,
-            R.string.tab_text_following
+            R.string.text_followers,
+            R.string.text_following
         )
     }
 }

@@ -8,7 +8,6 @@ import com.nasyith.githubuserv2.data.remote.response.UserItem
 import com.nasyith.githubuserv2.util.Event
 
 class FollowViewModel(private val userRepository: UserRepository) : ViewModel() {
-
     private val _followUser = MutableLiveData<List<UserItem>>()
     val followUser: LiveData<List<UserItem>> = _followUser
 

@@ -3,9 +3,6 @@ package com.nasyith.githubuserv2.data.remote.retrofit
 import com.nasyith.githubuserv2.data.remote.response.DetailUserResponse
 import com.nasyith.githubuserv2.data.remote.response.UserItem
 import com.nasyith.githubuserv2.data.remote.response.UserResponse
-import retrofit2.Call
-import retrofit2.http.GET
-import retrofit2.http.Query
 import retrofit2.http.*
 
 interface ApiService {

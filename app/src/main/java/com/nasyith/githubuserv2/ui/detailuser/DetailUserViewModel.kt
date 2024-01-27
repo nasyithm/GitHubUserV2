@@ -11,7 +11,6 @@ import com.nasyith.githubuserv2.util.Event
 import kotlinx.coroutines.launch
 
 class DetailUserViewModel(private val userRepository: UserRepository) : ViewModel() {
-
     private val _detailUser = MutableLiveData<DetailUserResponse>()
     val detailUser: LiveData<DetailUserResponse> = _detailUser
 

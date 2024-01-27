@@ -25,6 +25,17 @@ class FavoriteUserActivity : AppCompatActivity() {
         binding = ActivityFavoriteUserBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        getFavoriteUsersData()
+
+        val layoutManager = LinearLayoutManager(this)
+        binding.rvFavoriteUser.layoutManager = layoutManager
+        val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
+        binding.rvFavoriteUser.addItemDecoration(itemDecoration)
+
+        showError()
+    }
+
+    private fun getFavoriteUsersData() {
         favoriteUserViewModel.getFavoriteUsers().observe(this) { users ->
             val items = arrayListOf<UserItem>()
             val adapter = UserAdapter()
@@ -52,26 +63,21 @@ class FavoriteUserActivity : AppCompatActivity() {
                 }
             })
         }
-
-        val layoutManager = LinearLayoutManager(this)
-        binding.rvFavoriteUser.layoutManager = layoutManager
-        val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
-        binding.rvFavoriteUser.addItemDecoration(itemDecoration)
-
-        favoriteUserViewModel.isError.observe(this) { it ->
-            it.getContentIfNotHandled()?.let {
-                showError(it)
-            }
-        }
     }
 
     private fun showDetailUser(user: UserItem) {
-        val showDetailUserIntent = Intent(this@FavoriteUserActivity, DetailUserActivity::class.java)
+        val showDetailUserIntent = Intent(
+            this@FavoriteUserActivity, DetailUserActivity::class.java
+        )
         showDetailUserIntent.putExtra(DetailUserActivity.EXTRA_USER, user)
         startActivity(showDetailUserIntent)
     }
 
-    private fun showError(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    private fun showError() {
+        favoriteUserViewModel.isError.observe(this) { it ->
+            it.getContentIfNotHandled()?.let {
+                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

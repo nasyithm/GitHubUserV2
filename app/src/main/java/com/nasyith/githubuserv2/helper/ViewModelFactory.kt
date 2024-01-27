@@ -9,14 +9,16 @@ import com.nasyith.githubuserv2.ui.detailuser.DetailUserViewModel
 import com.nasyith.githubuserv2.ui.favoriteuser.FavoriteUserViewModel
 import com.nasyith.githubuserv2.ui.follow.FollowViewModel
 import com.nasyith.githubuserv2.ui.main.MainViewModel
-import java.lang.IllegalArgumentException
+import com.nasyith.githubuserv2.ui.splash.SplashViewModel
 
 class ViewModelFactory private constructor(private val userRepository: UserRepository) :
     ViewModelProvider.NewInstanceFactory() {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(SplashViewModel::class.java)) {
+            return SplashViewModel(userRepository) as T
+        } else if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             return MainViewModel(userRepository) as T
         } else if (modelClass.isAssignableFrom(DetailUserViewModel::class.java)) {
             return DetailUserViewModel(userRepository) as T

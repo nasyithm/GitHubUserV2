@@ -8,13 +8,60 @@
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/detailAvatar"
-        android:layout_width="160dp"
-        android:layout_height="160dp"
-        android:layout_marginTop="30dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_margin="40dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:scrCompat="@tools:sample/avatars" />
+
+    <TextView
+        android:id="@+id/detailFollowers"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/follow_number"
+        android:textSize="17sp"
+        app:layout_constraintBottom_toTopOf="@+id/textDetailFollowers"
+        app:layout_constraintEnd_toEndOf="@+id/textDetailFollowers"
+        app:layout_constraintStart_toStartOf="@+id/textDetailFollowers"
+        app:layout_constraintTop_toTopOf="@+id/detailAvatar" />
+
+    <TextView
+        android:id="@+id/detailFollowing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/follow_number"
+        android:textSize="17sp"
+        app:layout_constraintBottom_toTopOf="@+id/textDetailFollowing"
+        app:layout_constraintEnd_toEndOf="@+id/textDetailFollowing"
+        app:layout_constraintStart_toStartOf="@+id/textDetailFollowing"
+        app:layout_constraintTop_toTopOf="@+id/detailAvatar" />
+
+    <TextView
+        android:id="@+id/textDetailFollowers"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="30dp"
+        android:text="@string/text_followers"
+        android:textSize="17sp"
+        app:layout_constraintBottom_toBottomOf="@+id/detailAvatar"
+        app:layout_constraintStart_toEndOf="@+id/detailAvatar"
+        app:layout_constraintTop_toTopOf="@+id/detailAvatar" />
+
+    <TextView
+        android:id="@+id/textDetailFollowing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="30dp"
+        android:text="@string/text_following"
+        android:textSize="17sp"
+        app:layout_constraintBottom_toBottomOf="@+id/detailAvatar"
+        app:layout_constraintStart_toEndOf="@+id/textDetailFollowers"
+        app:layout_constraintTop_toTopOf="@+id/detailAvatar" />
 
     <TextView
         android:id="@+id/detailUsername"
@@ -23,8 +70,8 @@
         android:layout_marginTop="20dp"
         android:textSize="26sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/detailAvatar"
+        app:layout_constraintStart_toStartOf="@+id/detailAvatar"
         app:layout_constraintTop_toBottomOf="@+id/detailAvatar" />
 
     <TextView
@@ -34,45 +81,24 @@
         android:layout_marginTop="10dp"
         android:textSize="17sp"
         android:textStyle="italic"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/detailAvatar"
+        app:layout_constraintStart_toStartOf="@+id/detailAvatar"
         app:layout_constraintTop_toBottomOf="@+id/detailUsername" />
-
-    <TextView
-        android:id="@+id/detailFollowers"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:textSize="17sp"
-        app:layout_constraintEnd_toStartOf="@+id/progressBar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detailName" />
-
-    <TextView
-        android:id="@+id/detailFollowing"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:textSize="17sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/progressBar"
-        app:layout_constraintTop_toBottomOf="@+id/detailName" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="30dp"
         android:contentDescription="@string/tab_layout_hint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detailFollowers" />
+        app:layout_constraintTop_toBottomOf="@+id/detailName" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="368dp"
+        android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tabs" />

@@ -5,14 +5,12 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
 
 data class UserResponse(
-
 	@field:SerializedName("items")
 	val items: List<UserItem?>? = null
 )
 
 @Parcelize
 data class UserItem(
-
 	@field:SerializedName("login")
 	val login: String? = null,
 

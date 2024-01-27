@@ -3,7 +3,6 @@ package com.nasyith.githubuserv2.data.remote.response
 import com.google.gson.annotations.SerializedName
 
 data class DetailUserResponse(
-
 	@field:SerializedName("login")
 	val login: String? = null,
 
@@ -21,6 +20,4 @@ data class DetailUserResponse(
 
 	@field:SerializedName("following")
 	val following: Int? = null
-
-
 )

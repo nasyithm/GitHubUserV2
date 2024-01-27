@@ -18,7 +18,6 @@ import com.nasyith.githubuserv2.ui.adapter.UserAdapter
 import com.nasyith.githubuserv2.ui.detailuser.DetailUserActivity
 
 class FollowFragment : Fragment() {
-
     private var _binding: FragmentFollowBinding? = null
     private val binding get() = _binding!!
 
@@ -36,72 +35,14 @@ class FollowFragment : Fragment() {
             username = it.getString(ARG_USERNAME).toString()
         }
 
-        if (position == 1) {
-            followViewModel.dataLoaded.observe(viewLifecycleOwner) { isDataLoaded ->
-                if (!isDataLoaded) {
-                    followViewModel.findFollowersUser(username).observe(viewLifecycleOwner) { followers ->
-                        when (followers) {
-                            is Result.Loading -> {
-                                showLoading(true)
-                            }
-                            is Result.Success -> {
-                                showLoading(false)
-                                setFollowUserData(followers.data)
-                                followViewModel.setDataFollowUser(followers.data)
-                                followViewModel.setDataLoaded(true)
-                            }
-                            is Result.Error -> {
-                                showLoading(false)
-                                followViewModel.setError(followers.error)
-                                followViewModel.setDataLoaded(true)
-                            }
-                        }
-                    }
-                } else {
-                    followViewModel.followUser.observe(viewLifecycleOwner) {
-                        setFollowUserData(it)
-                    }
-                }
-            }
-        } else {
-            followViewModel.dataLoaded.observe(viewLifecycleOwner) { isDataLoaded ->
-                if (!isDataLoaded) {
-                    followViewModel.findFollowingUser(username).observe(viewLifecycleOwner) { following ->
-                        when (following) {
-                            is Result.Loading -> {
-                                showLoading(true)
-                            }
-                            is Result.Success -> {
-                                showLoading(false)
-                                setFollowUserData(following.data)
-                                followViewModel.setDataFollowUser(following.data)
-                                followViewModel.setDataLoaded(true)
-                            }
-                            is Result.Error -> {
-                                showLoading(false)
-                                followViewModel.setError(following.error)
-                                followViewModel.setDataLoaded(true)
-                            }
-                        }
-                    }
-                } else {
-                    followViewModel.followUser.observe(viewLifecycleOwner) {
-                        setFollowUserData(it)
-                    }
-                }
-            }
-        }
-
         val layoutManager = LinearLayoutManager(requireActivity())
         binding.rvFollow.layoutManager = layoutManager
         val itemDecoration = DividerItemDecoration(requireActivity(), layoutManager.orientation)
         binding.rvFollow.addItemDecoration(itemDecoration)
 
-        followViewModel.isError.observe(viewLifecycleOwner) { it ->
-            it.getContentIfNotHandled()?.let {
-                showError(it)
-            }
-        }
+        if (position == 1) getFollowersUserData() else getFollowingUserData()
+
+        showError()
     }
 
     override fun onCreateView(
@@ -110,6 +51,64 @@ class FollowFragment : Fragment() {
     ): View {
         _binding = FragmentFollowBinding.inflate(inflater, container, false)
         return binding.root
+    }
+
+    private fun getFollowersUserData() {
+        followViewModel.dataLoaded.observe(viewLifecycleOwner) { isDataLoaded ->
+            if (!isDataLoaded) {
+                followViewModel.findFollowersUser(username).observe(viewLifecycleOwner) { followers ->
+                    when (followers) {
+                        is Result.Loading -> {
+                            showLoading(true)
+                        }
+                        is Result.Success -> {
+                            showLoading(false)
+                            setFollowUserData(followers.data)
+                            followViewModel.setDataFollowUser(followers.data)
+                            followViewModel.setDataLoaded(true)
+                        }
+                        is Result.Error -> {
+                            showLoading(false)
+                            followViewModel.setError(followers.error)
+                            followViewModel.setDataLoaded(true)
+                        }
+                    }
+                }
+            } else {
+                followViewModel.followUser.observe(viewLifecycleOwner) {
+                    setFollowUserData(it)
+                }
+            }
+        }
+    }
+
+    private fun getFollowingUserData() {
+        followViewModel.dataLoaded.observe(viewLifecycleOwner) { isDataLoaded ->
+            if (!isDataLoaded) {
+                followViewModel.findFollowingUser(username).observe(viewLifecycleOwner) { following ->
+                    when (following) {
+                        is Result.Loading -> {
+                            showLoading(true)
+                        }
+                        is Result.Success -> {
+                            showLoading(false)
+                            setFollowUserData(following.data)
+                            followViewModel.setDataFollowUser(following.data)
+                            followViewModel.setDataLoaded(true)
+                        }
+                        is Result.Error -> {
+                            showLoading(false)
+                            followViewModel.setError(following.error)
+                            followViewModel.setDataLoaded(true)
+                        }
+                    }
+                }
+            } else {
+                followViewModel.followUser.observe(viewLifecycleOwner) {
+                    setFollowUserData(it)
+                }
+            }
+        }
     }
 
     private fun setFollowUserData(follow: List<UserItem>) {
@@ -126,8 +125,12 @@ class FollowFragment : Fragment() {
 
     private fun showLoading(isLoading: Boolean) { binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE }
 
-    private fun showError(message: String) {
-        Toast.makeText(requireActivity(), message, Toast.LENGTH_SHORT).show()
+    private fun showError() {
+        followViewModel.isError.observe(viewLifecycleOwner) { it ->
+            it.getContentIfNotHandled()?.let {
+                Toast.makeText(requireActivity(), it, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun showDetailUser(user: UserItem) {

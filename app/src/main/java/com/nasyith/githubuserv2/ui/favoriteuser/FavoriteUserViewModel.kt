@@ -8,7 +8,6 @@ import com.nasyith.githubuserv2.data.local.entity.FavoriteUser
 import com.nasyith.githubuserv2.util.Event
 
 class FavoriteUserViewModel(private val userRepository: UserRepository) : ViewModel() {
-
     private val _dataLoaded = MutableLiveData<Boolean>()
     val dataLoaded: LiveData<Boolean> = _dataLoaded
 
